@@ -227,14 +227,15 @@ module.exports = ({
               .then(user => {
                 
                 // If we already have a local account associated with their 
-                // email address, the user should sign in with that account - 
-                // and then they can link accounts if they wish.
-                //
-                // Note: Automatically linking them here could expose a 
-                // potential security exploit allowing someone to pre-register 
-                // or create an account elsewhere for another users email 
-                // address then trying to sign in from it, so don't do that.
-                if (user) return next(null, false)
+                // email address, we update the user access token and refresh token
+                if (user)  {
+                  if (accessToken) user[providerName.toLowerCase()].accessToken = accessToken
+                  if (refreshToken) user[providerName.toLowerCase()].refreshToken = refreshToken
+                  return functions.update(user, _profile)
+                  .then(user => {
+                    return next(null, user)
+                  })
+                }
                 
                 // If an account does not exist, create one for them and return
                 // a user object to passport, which will sign them in.
